@@ -355,7 +355,8 @@
   ([path subsample]
      (load-texture-from-file path subsample :linear))
   ([path subsample filter]
-     (load-texture-from-image (ImageIO/read (File. path)) subsample filter)))
+    (load-texture-from-image (ImageIO/read path) subsample filter)
+     #_(load-texture-from-image (ImageIO/read (File. path)) subsample filter)))
 
 (defn blit
   "Blits texture to the screen.  Ignores current projection matrix, but honors current transform matrix."
