@@ -15,6 +15,7 @@
 (gl-import- glEnable gl-enable)
 (gl-import- glLight set-light-array)
 (gl-import- glLightf set-light)
+(gl-import- glLightModel set-light-model)
 (gl-import- glMaterial set-material-array)
 (gl-import- glMaterialf set-material)
 (gl-import- glFog set-fog-array)
