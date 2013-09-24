@@ -13,7 +13,7 @@
 (gl-import- glColor3d color-3)
 (gl-import- glColor4d color-4)
 (gl-import- glEnable gl-enable)
-(gl-import- glLight set-light-array)
+(gl-import glLight set-light-array)
 (gl-import- glLightf set-light)
 (gl-import- glLightModel set-light-model)
 (gl-import- glMaterial set-material-array)
