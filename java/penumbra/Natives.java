@@ -60,6 +60,7 @@ public class Natives {
 
     protected static void extractNativeLib(String sysName, String name) throws IOException{
         String fullname = System.mapLibraryName(name);
+        fullname.replaceAll( "dylib", "jnilib" );
 
         String path = "native/"+sysName+"/" + fullname;
         InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(path);

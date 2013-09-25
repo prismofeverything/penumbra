@@ -13,9 +13,10 @@
 (gl-import- glColor3d color-3)
 (gl-import- glColor4d color-4)
 (gl-import- glEnable gl-enable)
-(gl-import glLight set-light-array)
+(gl-import- glLight set-light-array)
 (gl-import- glLightf set-light)
 (gl-import- glLightModel set-light-model)
+(gl-import- glLightModelf set-light-array-model)
 (gl-import- glMaterial set-material-array)
 (gl-import- glMaterialf set-material)
 (gl-import- glFog set-fog-array)
@@ -44,8 +45,19 @@
   ([r g b] (color-3 r g b))
   ([r g b a] (color-4 r g b a)))
 
+(defn light-model
+  "Sets values for light-mode 'num'.  Example:
+   (light 0
+     :position [1 1 1 0])"
+  [num & params]
+  (doseq [[property value] (partition 2 params)]
+    (let [property (enum property)]
+      (if (sequential? value)
+        (set-light-array-model property (-> (BufferUtils/createFloatBuffer (count value)) (.put (float-array value)) .rewind))
+        (set-light-model property value)))))
+
 (defn light
-  "Sets values for light 'num'.  Example:
+  "Sets values for light-mode 'num'.  Example:
    (light 0
      :position [1 1 1 0])"
   [num & params]

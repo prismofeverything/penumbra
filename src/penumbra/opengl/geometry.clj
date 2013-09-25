@@ -257,3 +257,5 @@
            (gl-end)))))))
 
 ;;;
+
+(gl-import glRectf gl-rect)
