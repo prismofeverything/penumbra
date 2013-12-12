@@ -64,7 +64,9 @@
                            (sort-by #(Math/abs (apply * (map - [w h] (:resolution %)))))
                            first
                            (display-mode! this))))
-     (size [this] (:resolution (display-mode this)))
+     (size [this] ;; (:resolution (display-mode this))
+       (let [w (Display/getWidth) h (Display/getHeight)]
+         [w h]))
      (resized? [this] (not= @window-size (size this)))
      (invalidated? [_] (Display/isDirty))
      (close? [_] (try
@@ -75,22 +77,21 @@
      (process! [_] (Display/processMessages))
      (handle-resize! [this]
                      (dosync
-                      (when (resized? this)
+                      (when (Display/wasResized) ;;  (resized? this)
                         (let [[w h] (size this)]
                           (ref-set window-size [w h])
                           (viewport 0 0 w h)
-                          ;(viewport 0 0 w h)
                           (event/publish! app :reshape [(Display/getX) (Display/getY) w h])))))
      (init! [this]
             (when-not (Display/isCreated)
               (Display/setParent nil)
               (Display/create (PixelFormat.))
+              (Display/setResizable true)
               (display-mode! this 800 600))
             (-> (InternalTextureLoader/get) .clear)
             (TextureImpl/bindNone)
             (let [[w h] (size this)]
               (viewport (Display/getX) (Display/getY) w h)))
-              ;(viewport 0 0 w h)))
      (destroy! [_]
                (-> (InternalTextureLoader/get) .clear)
                (context/destroy)

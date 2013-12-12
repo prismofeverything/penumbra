@@ -1,4 +1,4 @@
-(defproject kephale/penumbra "0.6.7-SNAPSHOT"
+(defproject prismofeverything/penumbra "0.6.11"
   :description "An idiomatic wrapper for OpenGL."
   :dependencies [[kephale/slick-util "1.0.1"]
                  [kephale/cantor "0.4.1"]
