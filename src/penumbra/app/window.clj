@@ -47,55 +47,59 @@
    :fullscreen (.isFullscreenCapable m)
    :mode m})
 
+(defn reshape
+  [app size]
+  (let [[w h] size]
+    (viewport 0 0 w h)))
+
 (defn create-fixed-window [app]
-  (let [window-size (ref [0 0])]
-    (reify
-     Window
-     (vsync! [_ flag] (Display/setVSyncEnabled flag))
-     (fullscreen! [_ flag] (Display/setFullscreen flag))
-     (title! [_ title] (Display/setTitle title))
-     (display-modes [_] (map transform-display-mode (Display/getAvailableDisplayModes)))
-     (display-mode [_] (transform-display-mode (Display/getDisplayMode)))
-     (display-mode! [_ mode] (Display/setDisplayMode (:mode mode)))
-     (display-mode! [this w h]
-                    (let [max-bpp (apply max (map :bpp (display-modes this)))]
-                      (->> (display-modes this)
-                           (filter #(= max-bpp (:bpp %)))
-                           (sort-by #(Math/abs (apply * (map - [w h] (:resolution %)))))
-                           first
-                           (display-mode! this))))
-     (size [this] ;; (:resolution (display-mode this))
-       (let [w (Display/getWidth) h (Display/getHeight)]
-         [w h]))
-     (resized? [this] (not= @window-size (size this)))
-     (invalidated? [_] (Display/isDirty))
-     (close? [_] (try
+  (reify
+    Window
+    (vsync! [_ flag] (Display/setVSyncEnabled flag))
+    (fullscreen! [this flag] 
+      (Display/setFullscreen flag)
+      (reshape app (size this)))
+    (title! [_ title] (Display/setTitle title))
+    (display-modes [_] (map transform-display-mode (Display/getAvailableDisplayModes)))
+    (display-mode [_] (transform-display-mode (Display/getDisplayMode)))
+    (display-mode! [_ mode] (Display/setDisplayMode (:mode mode)))
+    (display-mode! [this w h]
+      (let [max-bpp (apply max (map :bpp (display-modes this)))]
+        (->> (display-modes this)
+             (filter #(= max-bpp (:bpp %)))
+             (sort-by #(Math/abs (apply * (map - [w h] (:resolution %)))))
+             first
+             (display-mode! this))))
+    (size [this]
+      (let [w (Display/getWidth) h (Display/getHeight)]
+        [w h]))
+    (resized? [this] (Display/wasResized))
+    (invalidated? [_] (Display/isDirty))
+    (close? [_] (try
                   (Display/isCloseRequested)
                   (catch Exception e
                     true)))
-     (update! [_] (Display/update))
-     (process! [_] (Display/processMessages))
-     (handle-resize! [this]
-                     (dosync
-                      (when (Display/wasResized) ;;  (resized? this)
-                        (let [[w h] (size this)]
-                          (ref-set window-size [w h])
-                          (viewport 0 0 w h)
-                          (event/publish! app :reshape [(Display/getX) (Display/getY) w h])))))
-     (init! [this]
-            (when-not (Display/isCreated)
-              (Display/setParent nil)
-              (Display/create (PixelFormat.))
-              (Display/setResizable true)
-              (display-mode! this 800 600))
-            (-> (InternalTextureLoader/get) .clear)
-            (TextureImpl/bindNone)
-            (let [[w h] (size this)]
-              (viewport (Display/getX) (Display/getY) w h)))
-     (destroy! [_]
-               (-> (InternalTextureLoader/get) .clear)
-               (context/destroy)
-               (Display/destroy)))))
+    (update! [_] (Display/update))
+    (process! [_] (Display/processMessages))
+    (handle-resize! [this]
+      (when (resized? this)
+        (let [[w h] (size this)]
+          (viewport 0 0 w h)
+          (event/publish! app :reshape [(Display/getX) (Display/getY) w h]))))
+    (init! [this]
+      (when-not (Display/isCreated)
+        (Display/setParent nil)
+        (Display/create (PixelFormat.))
+        (Display/setResizable true)
+        (display-mode! this 800 600))
+      (-> (InternalTextureLoader/get) .clear)
+      (TextureImpl/bindNone)
+      (let [[w h] (size this)]
+        (viewport (Display/getX) (Display/getY) w h)))
+    (destroy! [_]
+      (-> (InternalTextureLoader/get) .clear)
+      (context/destroy)
+      (Display/destroy))))
 
 (defmacro with-window [window & body]
   `(context/with-context nil
